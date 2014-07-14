@@ -11,6 +11,7 @@
 #include <shogun/structure/SOSVMHelper.h>
 #include <shogun/base/Parameter.h>
 #include <shogun/labels/StructuredLabels.h>
+#include <shogun/loss/HingeLoss.h>
 
 using namespace shogun;
 
@@ -66,7 +67,7 @@ float64_t CSOSVMHelper::primal_objective(SGVector<float64_t> w, CStructuredModel
 		CResultSet* result = model->argmax(w, i);
 
 		// hinge loss for point i
-		float64_t hinge_loss_i = result->score;
+		float64_t hinge_loss_i = CHingeLoss().loss(result->score);
 		ASSERT(hinge_loss_i >= 0);
 
 		hinge_losses += hinge_loss_i;

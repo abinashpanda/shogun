@@ -72,6 +72,7 @@ SGVector<float64_t> CMultilabelModel::get_joint_feature_vector(int32_t feat_idx,
 	ASSERT(slabel != NULL);
 	SGVector<int32_t> slabel_data = slabel->get_data();
 
+#pragma omp parallel for
 	for (index_t i = 0; i < slabel_data.vlen; i++)
 	{
 		for (index_t j = 0, k = slabel_data[i] * x.vlen; j < x.vlen; j++, k++)
@@ -105,8 +106,10 @@ float64_t CMultilabelModel::delta_loss(SGVector<float64_t> y1, SGVector<float64_
 
 	float64_t loss = 0;
 
+#pragma omp parallel for
 	for (index_t i = 0; i < y1.vlen; i++)
 	{
+#pragma omp atomic
 		loss += delta_loss(y1[i], y2[i]);
 	}
 
@@ -175,6 +178,7 @@ CResultSet * CMultilabelModel::argmax(SGVector<float64_t> w, int32_t feat_idx,
 	SGVector<float64_t> y_pred_dense(m_num_classes);
 	y_pred_dense.zero();
 
+#pragma omp parallel for
 	for (int32_t c = 0; c < m_num_classes; c++)
 	{
 		score = dot_feats->dense_dot(feat_idx, w.vector + c * feats_dim, feats_dim);
@@ -182,6 +186,7 @@ CResultSet * CMultilabelModel::argmax(SGVector<float64_t> w, int32_t feat_idx,
 		if (score > 0)
 		{
 			y_pred_dense[c] = 1;
+#pragma omp atomic
 			total_score += score;
 		}
 

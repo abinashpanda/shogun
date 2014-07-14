@@ -81,6 +81,7 @@ void SGSparseVector<T>::add_to_dense(T alpha, T * vec, int32_t dim, bool abs_val
 
 	if (abs_val)
 	{
+#pragma omp parallel for
 		for (int32_t i = 0; i < num_feat_entries; i++)
 		{
 			vec[features[i].feat_index] += alpha*CMath::abs(features[i].entry);
@@ -88,6 +89,7 @@ void SGSparseVector<T>::add_to_dense(T alpha, T * vec, int32_t dim, bool abs_val
 	}
 	else
 	{
+#pragma omp parallel for
 		for (int32_t i = 0; i < num_feat_entries; i++)
 		{
 			vec[features[i].feat_index] += alpha*features[i].entry;

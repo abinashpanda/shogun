@@ -77,6 +77,7 @@ SGVector<float64_t> CMultilabelCLRModel::get_joint_feature_vector(
 	SGVector<float64_t> x = dot_feats->get_computed_dot_feature_vector(feat_idx);
 	int32_t feats_dim = dot_feats->get_dim_feature_space();
 
+#pragma omp parallel for
 	for (index_t i = 0; i < num_classes + 1; i++)
 	{
 		float64_t coeff = label_coeffs[i];
@@ -112,8 +113,10 @@ float64_t CMultilabelCLRModel::delta_loss(SGVector<float64_t> y1, SGVector<float
 
 	float64_t loss = 0;
 
+#pragma omp parallel for
 	for (index_t i = 0; i < y1.vlen; i++)
 	{
+#pragma omp atomic
 		loss += delta_loss(y1[i], y2[i]);
 	}
 
@@ -208,6 +211,7 @@ CResultSet * CMultilabelCLRModel::argmax(SGVector<float64_t> w, int32_t feat_idx
 
 	SGVector<float64_t> class_product(m_num_classes);
 
+#pragma omp parallel for
 	for (index_t i = 0; i < m_num_classes; i++)
 	{
 		score = dot_feats->dense_dot(feat_idx, w.vector + i * feats_dim,
@@ -215,10 +219,10 @@ CResultSet * CMultilabelCLRModel::argmax(SGVector<float64_t> w, int32_t feat_idx
 		class_product[i] = score - calibrated_score;
 	}
 
-	int32_t count = 0;
 	SGVector<float64_t> y_pred_dense(m_num_classes);
 	y_pred_dense.zero();
 
+#pragma omp parallel for
 	for (index_t i = 0; i < m_num_classes; i++)
 	{
 		score = class_product[i] - plus_minus_one[i];
@@ -226,12 +230,10 @@ CResultSet * CMultilabelCLRModel::argmax(SGVector<float64_t> w, int32_t feat_idx
 		if (score >= 0)
 		{
 			y_pred_dense[i] = 1;
-			count++;
 		}
 	}
 
 	SGVector<int32_t> y_pred_sparse = to_sparse(y_pred_dense, 1, 0);
-	ASSERT(count == y_pred_sparse.vlen);
 
 	CResultSet * ret = new CResultSet();
 	SG_REF(ret);

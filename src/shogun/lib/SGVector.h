@@ -489,6 +489,7 @@ template<class T> class SGVector : public SGReferencedData
 			T* target, T alpha, const T* v1, T beta, const T* v2,
 			int32_t len)
 		{
+#pragma omp parallel for
 			for (int32_t i=0; i<len; i++)
 				target[i]=alpha*v1[i]+beta*v2[i];
 		}

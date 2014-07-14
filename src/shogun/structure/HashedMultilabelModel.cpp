@@ -152,8 +152,10 @@ float64_t CHashedMultilabelModel::delta_loss(SGVector<float64_t> y1,
 
 	float64_t loss = 0;
 
+#pragma omp parallel for
 	for (index_t i = 0; i < y1.vlen; i++)
 	{
+#pragma omp atomic
 		loss += delta_loss(y1[i], y2[i]);
 	}
 
@@ -262,8 +264,8 @@ CResultSet * CHashedMultilabelModel::argmax(SGVector<float64_t> w,
 
 	SGVector<float64_t> y_pred_dense(m_num_classes);
 	y_pred_dense.zero();
-	int32_t count = 0;
 
+#pragma omp parallel for
 	for (int32_t c = 0; c < m_num_classes; c++)
 	{
 		SGSparseVector<float64_t> phi = get_hashed_feature_vector(feat_idx,
@@ -273,14 +275,13 @@ CResultSet * CHashedMultilabelModel::argmax(SGVector<float64_t> w,
 		if (score > 0)
 		{
 			y_pred_dense[c] = 1;
+#pragma omp atomic
 			total_score += score;
-			count++;
 		}
 
 	}
 
 	SGVector<int32_t> y_pred_sparse = to_sparse(y_pred_dense, 1, 0);
-	ASSERT(count == y_pred_sparse.vlen);
 
 	CResultSet * ret = new CResultSet();
 	SG_REF(ret);

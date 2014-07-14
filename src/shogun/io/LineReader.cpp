@@ -27,7 +27,7 @@ CLineReader::CLineReader(FILE* stream, CTokenizer* tokenizer)
 	init();
 
 	m_stream=stream;
-	m_max_token_length=10*1024*1024;
+	m_max_token_length=512*1024*1024;
 
 	SG_REF(tokenizer);
 	m_tokenizer=tokenizer;
